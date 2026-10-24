@@ -28,6 +28,8 @@
 
     // Lifecycle Stages: 'seedling' (pixel-art intro owns the screen), 'blooming'
     stage: 'seedling',
+    fit: 1,
+    stemStretch: 1,
 
     // Botanical Time-Lapse Bloom Progress
     progress: 0.05,        // 0.05 = seedling, 1.0 = majestic full bloom
@@ -170,9 +172,9 @@
     chrysanthemums: {
       tag: "🌼 Radiating Florets",
       name: "Spider Chrysanthemums",
-      botanicalName: "Chrysanthemum morifolium &bull; Asteraceae",
+      botanicalName: "Chrysanthemum morifolium &bull; Asteraceae<code class=\"spellcheck\">spell('chrysanthemum') <span>// ✅ yes, there's an h after the c. I checked. twice.</span></code>",
       desc: "Originating in ancient East Asia over 3,000 years ago, spider mums feature tubular ray florets that arch outward like golden floral fireworks.",
-      fact: "Under chrysanthemums...\n(Ensure you check the spelling — this is the actual spelling 😂! C-h-r-y-s-a-n-t-h-e-m-u-m-s!)",
+      fact: "Japan's imperial throne is literally called the Chrysanthemum Throne, and a 16-petal mum has been the Emperor's seal for over 800 years.",
       note: "they stand for joy & long life. selfishly, I'd like both of those with you.",
     },
     lilies: {
@@ -206,6 +208,14 @@
     { relX: 180, relY: -245, scale: 0.92, tilt: 0.36, delay: 0.26, z: 1 },
     { relX: -300, relY: -150, scale: 0.88, tilt: -0.65, delay: 0.24, z: 1 },
     { relX: 302, relY: -145, scale: 0.88, tilt: 0.66, delay: 0.24, z: 1 },
+  ];
+  // Crown blooms only used on tall phone screens to fill the top of the bouquet
+  const PORTRAIT_FILLERS = [
+    { relX: -120, relY: -330, scale: 1.05, tilt: -0.25, delay: 0.27, z: 2 },
+    { relX: 125, relY: -325, scale: 1.05, tilt: 0.25, delay: 0.27, z: 2 },
+    { relX: -235, relY: -205, scale: 0.98, tilt: -0.45, delay: 0.25, z: 1 },
+    { relX: 238, relY: -200, scale: 0.98, tilt: 0.46, delay: 0.25, z: 1 },
+    { relX: 0, relY: -60, scale: 1.1, tilt: 0.0, delay: 0.2, z: 9 },
   ];
   const FILLER_COLORS = ['peach', 'lavender', 'white', 'magenta', 'gold', 'coral', 'red', 'yellow', 'wine', 'white', 'peach'];
 
@@ -511,7 +521,10 @@
     if (state.stage === 'seedling') return;
 
     // Fit the bouquet to smaller screens, scaling around the root of the stems
-    const fit = Math.min(1, state.width / 900, state.height / 900);
+    // Tall phone screens get bigger blooms; the extra height goes into longer stems instead
+    const portrait = state.height > state.width * 1.2;
+    const fit = portrait ? Math.min(1, state.width / 760) : Math.min(1, state.width / 900, state.height / 900);
+    state.fit = fit;
     ctx.save();
     ctx.translate(centerX, groundY);
     ctx.scale(fit, fit);
@@ -569,13 +582,35 @@
       const donor = scheme[(i * 5 + 3) % scheme.length];
       return { ...f, type: donor.type, color: FILLER_COLORS[i % FILLER_COLORS.length] };
     });
-    const bouquet = scheme.concat(fillers).map((fl) => ({
-      ...fl,
-      relX: fl.relX * SPREAD_X,
-      relY: fl.relY * SPREAD_Y,
-      scale: fl.scale * BLOOM_SIZE,
-    }));
     const centerY = state.height * 0.54;
+
+    // On phones, stretch the stems so the bouquet climbs into the empty top space.
+    // It reaches higher still when the bio card is collapsed.
+    const portrait = state.height > state.width * 1.2;
+    const cardEl = document.getElementById('botanical-card-container');
+    const cardOpen = !(cardEl && cardEl.classList.contains('is-collapsed'));
+    let stretchTarget = 1;
+    if (portrait) {
+      const topReach = state.height * (cardOpen ? 0.36 : 0.17);
+      const deepest = groundY - (centerY - 330 * SPREAD_Y); // tallest stem, unscaled
+      stretchTarget = Math.max(1, (groundY - topReach) / (deepest * state.fit));
+    }
+    state.stemStretch += (stretchTarget - state.stemStretch) * 0.05;
+    const stretch = state.stemStretch;
+
+    const extras = portrait ? PORTRAIT_FILLERS.map((f, i) => {
+      const donor = scheme[(i * 3 + 1) % scheme.length];
+      return { ...f, type: donor.type, color: FILLER_COLORS[(i + 4) % FILLER_COLORS.length] };
+    }) : [];
+    const bouquet = scheme.concat(fillers, extras).map((fl) => {
+      const rise = groundY - (centerY + fl.relY * SPREAD_Y);
+      return {
+        ...fl,
+        relX: fl.relX * SPREAD_X,
+        relY: groundY - rise * stretch - centerY,
+        scale: fl.scale * BLOOM_SIZE,
+      };
+    });
     const baseOriginX = centerX;
     const baseOriginY = groundY;
 

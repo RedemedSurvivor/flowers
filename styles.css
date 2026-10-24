@@ -386,6 +386,20 @@ body[data-species="grand"] .bio-title { font-family: 'Playfair Display', serif; 
   margin-bottom: 14px;
 }
 
+.spellcheck {
+  display: block;
+  margin-top: 6px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 0.68rem;
+  font-style: normal;
+  color: var(--accent-2);
+  white-space: normal;
+}
+.spellcheck span { color: var(--ink-dim); }
+
 .bio-text {
   font-size: 0.84rem;
   font-weight: 300;
