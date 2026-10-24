@@ -172,7 +172,7 @@
     chrysanthemums: {
       tag: "🌼 Radiating Florets",
       name: "Spider Chrysanthemums",
-      botanicalName: "Chrysanthemum morifolium &bull; Asteraceae<code class=\"spellcheck\">spell('chrysanthemum') <span>// ✅ yes, there's an h after the c. I checked. twice.</span></code>",
+      botanicalName: "Chrysanthemum morifolium &bull; Asteraceae<code class=\"spellcheck\">spell('chrysanthemum') <span>// Take note of the spelling🤣.</span></code>",
       desc: "Originating in ancient East Asia over 3,000 years ago, spider mums feature tubular ray florets that arch outward like golden floral fireworks.",
       fact: "Japan's imperial throne is literally called the Chrysanthemum Throne, and a 16-petal mum has been the Emperor's seal for over 800 years.",
       note: "they stand for joy & long life. selfishly, I'd like both of those with you.",
