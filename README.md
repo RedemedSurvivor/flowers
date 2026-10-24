@@ -9,34 +9,15 @@ An interactive procedural ASCII botanical engine, organic seedling time-lapse, a
 
 ---
 
-## 🌺 Key Features
+## 🌺 The Experience
 
-1. **🌱 Seedling on Organic Soil**:
-   - Begins at the dark soil layer with a curved seedling sprout, dual pairs of cotyledon leaves, mineral pebbles, and orbiting sacred-geometry ASCII particle rings.
-2. **🧑‍🌾 Vintage Farmer & Procedural Web Audio**:
-   - Clicking **"Add Water & Cultivate"** prompts a vintage farmer character (straw hat, denim overalls, galvanized watering can) to walk to the seedling with footstep audio, tilt the can, and sprinkle water with splashing sound effects.
-   - All sounds (footsteps, water pouring stream, bloom whoosh, resonant sine chimes) are generated procedurally with the Web Audio API without external audio assets.
-3. **💐 Upward Stem Bouquet Morph**:
-   - The seedling lifts against gravity, straightens its stem, and branches into a bountiful 13-bloom bouquet arrangement with stems rooted in the soil bed.
-4. **✨ Split Typography Glide**:
-   - The headline *"Who needs flowers when you can code them?"* starts clustered above the landing sprout.
-   - Upon blooming, it glides smoothly to the lateral margin (`#title-left`), remaining readable against the negative space.
-   - Headline typography colors react to the active theme/design system.
-5. **📜 Botanical Species Dossiers**:
-   - Live information dossiers on the right margin highlighting botanical history and insights for each flower species.
-   - Unique typography per flower (Playfair Display, Cormorant Garamond, Cinzel).
-   - Includes the playful Easter egg for Spider Chrysanthemums:
-     > *"Under chrysanthemums...\n(Ensure you check the spelling — this is the actual spelling 😂! C-h-r-y-s-a-n-t-h-e-m-u-m-s!)"*
-6. **🎛️ Minimal Spring Collapsible Dock**:
-   - Clean collapsed pill at the bottom center (`#dock-collapsed-pill`).
-   - Expands on hover with spring physics (`cubic-bezier(0.34, 1.56, 0.64, 1)`).
-   - Houses controls for **Flower Species**, **Design System / Theme**, **Audio toggle**, and **Re-water**.
-7. **🎨 5 Design Systems / Themes**:
-   - **Botanical Classic**: Lush crimson, gold, and verdant greens.
-   - **Midnight Gold**: Opulent golden yellows, amber, and honey radiance.
-   - **Sakura Dream**: Pastel blush pinks, cherry blossom rose, and soft emeralds.
-   - **Cyberpunk Neon**: High-contrast electric magenta, cyan, and laser yellow.
-   - **Phosphor Matrix**: Retro green monochrome CRT terminal phosphor.
+1. **🌱 A pure-black landing** — just a quote (*"For the days you need flowers & I'm not there to bring them… so I grew you some."*), a pixel-art seedling asking *"psst… water me?"*, and a glowing water-drop button.
+2. **🧑‍🌾 The farmer** — tap the drop and a pixel-art farmer (straw hat, plaid shirt, overalls, watering can) walks in with *ta-ta-ta* footsteps, says hi, pours real falling water droplets onto the sprout, waits, and sends a little heart.
+3. **💐 The bloom** — the sprout grows a bud, sparkles, and hands the stage to the ASCII bouquet, which grows from the same spot while the farmer strolls off.
+4. **📜 Flower bio card** — appears after the bloom with a history blurb, a fun fact and *a note from me ♡* for each flower. Collapsible with the corner button.
+5. **🎛️ Springy dock** — flower chips, colour-theme swatches, sound toggle and *water again*, with bouncy hover/press/jelly transitions (left rail on desktop, bottom bar on phones).
+
+The quote lives only on the landing; once the flowers bloom, the screen belongs to them.
 
 ---
 
@@ -75,6 +56,6 @@ python -m http.server 5500
 Visit `http://localhost:5500`.
 
 ### Keyboard Shortcuts
-- `Space` or `W`: Add Water / Re-water
+- `Space` or `W`: Water the seedling
 - `S`: Toggle Audio
-- `H`: Toggle UI dock and dossier cards for clean cinematic viewing
+- `H`: Hide the dock and bio card for clean viewing

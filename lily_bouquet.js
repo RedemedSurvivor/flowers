@@ -26,16 +26,8 @@
     cols: 0,
     rows: 0,
 
-    // Lifecycle Stages: 'seedling', 'watering', 'blooming'
+    // Lifecycle Stages: 'seedling' (pixel-art intro owns the screen), 'blooming'
     stage: 'seedling',
-    farmer: {
-      x: -120,          // Farmer start position off-screen left
-      targetX: 0,
-      y: 0,
-      animFrame: 0,
-      isPouring: false,
-      waterDrops: [],
-    },
 
     // Botanical Time-Lapse Bloom Progress
     progress: 0.05,        // 0.05 = seedling, 1.0 = majestic full bloom
@@ -165,6 +157,7 @@
       botanicalName: "Plantae Magnoliophyta &bull; Flora Bountiful",
       desc: "An opulent multi-species botanical arrangement featuring spiraling garden roses, radiating spider chrysanthemums, recurved royal lilies, and ruffled romantic peonies.",
       fact: "Polyculture arrangements like this have been celebrated since 17th-century Dutch masters as representations of nature's infinite creative geometry.",
+      note: "a little of everything, because one kind of flower was never going to be enough for you.",
     },
     roses: {
       tag: "🌹 Royal Rosa Dossier",
@@ -172,6 +165,7 @@
       botanicalName: "Rosa gallica &bull; Rosaceae",
       desc: "Revered for centuries in royal gardens, cabbage roses feature up to 40 layered, spiraled petals arranged according to the golden ratio.",
       fact: "Fossilized rose leaves date back 35 million years. Cleopatra was said to have carpeted her banquet floors with a foot of rose petals.",
+      note: "roses are the obvious choice. you were never the obvious choice — you're the only one.",
     },
     chrysanthemums: {
       tag: "🌼 Radiating Florets",
@@ -179,6 +173,7 @@
       botanicalName: "Chrysanthemum morifolium &bull; Asteraceae",
       desc: "Originating in ancient East Asia over 3,000 years ago, spider mums feature tubular ray florets that arch outward like golden floral fireworks.",
       fact: "Under chrysanthemums...\n(Ensure you check the spelling — this is the actual spelling 😂! C-h-r-y-s-a-n-t-h-e-m-u-m-s!)",
+      note: "they stand for joy & long life. selfishly, I'd like both of those with you.",
     },
     lilies: {
       tag: "🌺 Regal Lilium Dossier",
@@ -186,6 +181,7 @@
       botanicalName: "Lilium asiatica &bull; Liliaceae",
       desc: "Distinguished by six massive recurved tepals, deep throat papillae (freckles), and prominent filaments tipped with golden pollen anthers.",
       fact: "In botanical folklore, lilies represent majestic rebirth. Each lily blossom faces the horizon to maximize sun exposure and pollinator flight paths.",
+      note: "lilies always turn to face the light. funny, I have the same problem around you.",
     },
     peonies: {
       tag: "🌸 Voluminous Blossom",
@@ -193,8 +189,25 @@
       botanicalName: "Paeonia lactiflora &bull; Paeoniaceae",
       desc: "Sensuous and lavish, peonies burst from tight round spheres into pillowy bowls with dozens of crinkled, translucent, ruffled layers.",
       fact: "In China, the peony is known as the 'King of Flowers' (花王) and was declared the national flower during the Qing dynasty.",
+      note: "peonies mean a happy life & good fortune. I already got mine — I met you.",
     },
   };
+
+  // Gap-filling blooms added to every scheme (type borrowed from the scheme, so single-species bouquets stay pure)
+  const BOUQUET_FILLERS = [
+    { relX: -85, relY: -70, scale: 1.15, tilt: -0.2, delay: 0.18, z: 10 },
+    { relX: 88, relY: -75, scale: 1.15, tilt: 0.22, delay: 0.19, z: 10 },
+    { relX: -95, relY: 95, scale: 1.2, tilt: -0.28, delay: 0.15, z: 10 },
+    { relX: 95, relY: 92, scale: 1.2, tilt: 0.3, delay: 0.15, z: 10 },
+    { relX: 0, relY: -165, scale: 1.1, tilt: 0.05, delay: 0.2, z: 6 },
+    { relX: -255, relY: 120, scale: 1.0, tilt: -0.5, delay: 0.17, z: 3 },
+    { relX: 258, relY: 115, scale: 1.0, tilt: 0.52, delay: 0.17, z: 3 },
+    { relX: -175, relY: -250, scale: 0.92, tilt: -0.35, delay: 0.26, z: 1 },
+    { relX: 180, relY: -245, scale: 0.92, tilt: 0.36, delay: 0.26, z: 1 },
+    { relX: -300, relY: -150, scale: 0.88, tilt: -0.65, delay: 0.24, z: 1 },
+    { relX: 302, relY: -145, scale: 0.88, tilt: 0.66, delay: 0.24, z: 1 },
+  ];
+  const FILLER_COLORS = ['peach', 'lavender', 'white', 'magenta', 'gold', 'coral', 'red', 'yellow', 'wine', 'white', 'peach'];
 
   // Bouquet Composition Schemes (13 blooms, tiered depth)
   const BOUQUET_SCHEMES = {
@@ -304,22 +317,40 @@
     return state.audioCtx;
   }
 
-  // Farmer Footstep sound
+  // Farmer Footstep sound: a crisp "ta" (filtered noise tick) over a soft heel thump
   function playFootstepSound() {
     const ctx = getAudioContext();
     if (!ctx) return;
     try {
+      const t = ctx.currentTime;
+      const len = Math.floor(ctx.sampleRate * 0.06);
+      const buffer = ctx.createBuffer(1, len, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 1400 + Math.random() * 500;
+      filter.Q.value = 1.2;
+      const nGain = ctx.createGain();
+      nGain.gain.value = 0.22;
+      noise.connect(filter);
+      filter.connect(nGain);
+      nGain.connect(ctx.destination);
+      noise.start(t);
+
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(80 + Math.random() * 30, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.12);
-      gain.gain.setValueAtTime(0.08, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(140 + Math.random() * 30, t);
+      osc.frequency.exponentialRampToValueAtTime(55, t + 0.08);
+      gain.gain.setValueAtTime(0.12, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
       osc.connect(gain);
       gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.13);
+      osc.start(t);
+      osc.stop(t + 0.1);
     } catch (e) {}
   }
 
@@ -476,18 +507,22 @@
     const groundY = state.height * 0.88;
     const centerX = state.width / 2 + state.wind.x * 18;
 
+    // The landing is pure black: the pixel-art intro (garden_intro.js) draws the seedling & farmer
+    if (state.stage === 'seedling') return;
+
+    // Fit the bouquet to smaller screens, scaling around the root of the stems
+    const fit = Math.min(0.9, state.width / 1000, state.height / 1000);
+    ctx.save();
+    ctx.translate(centerX, groundY);
+    ctx.scale(fit, fit);
+    ctx.translate(-centerX, -groundY);
+
     // 1. Draw Mound of Organic Soil & Base Roots
     drawSoilBed(ctx, centerX, groundY, pal);
 
-    // 2. STAGE A: SEEDLING / FARMER WATERING PHASE
-    if (state.stage === 'seedling' || state.stage === 'watering') {
-      drawSeedlingSprout(ctx, centerX, groundY, progress, time, pal);
-      drawFarmerAnimation(ctx, centerX, groundY, time, pal);
-      return;
-    }
-
-    // 3. STAGE B: BOUNTIFUL BOUQUET BLOOM (Stem-driven growth)
+    // 2: BOUNTIFUL BOUQUET BLOOM (Stem-driven growth)
     drawBountifulBouquet(ctx, progress, time, centerX, groundY, pal);
+    ctx.restore();
   }
 
   // Rich soil mound at base (Reel 2 inspired: organic soil granules and layered bed)
@@ -521,228 +556,25 @@
     ctx.restore();
   }
 
-  // Tender Sprout / Seedling (Faithfully reenacting Reel 2 DefhSsAoMJd):
-  // Drooping curved stem that uncurls against gravity, paired cotyledon leaves, and sacred geometry particle rings
-  function drawSeedlingSprout(ctx, cx, groundY, prog, time, pal) {
-    // Unfurling lift: if watering, the sprout straightens and lifts upward
-    const lift = state.stage === 'watering' && state.farmer.isPouring 
-      ? Math.min(1.0, (performance.now() - state.farmer.waterStartTime) / 2200) 
-      : 0;
-
-    const sway = Math.sin(time * 2.2) * (4 * (1 - lift * 0.6));
-    const h = (65 + lift * 45) + Math.sin(time * 3) * 2;
-    
-    // In Reel 2, the seedling starts curved/drooping to the left, then straightens up
-    const droopX = (1 - lift) * -28 + sway;
-    const droopY = (1 - lift) * 18;
-
-    ctx.save();
-    ctx.translate(cx, groundY);
-
-    // Subtle sacred geometry particle rings around budding seedling (as in Reel 2 DefhSsAoMJd)
-    const ringRadius = 28 + Math.sin(time * 3) * 4;
-    ctx.beginPath();
-    ctx.arc(droopX, -h + droopY, ringRadius, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(${pal.white.base.join(',')}, ${0.12 + Math.sin(time * 4) * 0.08})`;
-    ctx.lineWidth = 1.2;
-    ctx.setLineDash([3, 5]);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Main sprout stem: smooth cubic bezier curve
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.bezierCurveTo(
-      (1 - lift) * 15, -h * 0.3,
-      droopX * 0.8, -h * 0.7 + droopY,
-      droopX, -h + droopY
-    );
-    ctx.strokeStyle = `rgb(${pal.stems.shadow.join(',')})`;
-    ctx.lineWidth = 6;
-    ctx.lineCap = 'round';
-    ctx.stroke();
-
-    ctx.strokeStyle = `rgb(${pal.stems.highlight.join(',')})`;
-    ctx.lineWidth = 4;
-    ctx.stroke();
-
-    // Two pairs of cotyledon leaves (as seen in Reel 2)
-    // Tier 1: Lower paired leaves
-    const midX = droopX * 0.5;
-    const midY = -h * 0.45 + droopY * 0.5;
-    const leafSpread = 0.55 + lift * 0.25 + Math.sin(time * 2) * 0.05;
-
-    // Lower left leaf
-    ctx.save();
-    ctx.translate(midX, midY);
-    ctx.rotate(-leafSpread - 0.3);
-    ctx.beginPath();
-    ctx.ellipse(0, -14, 6.5, 16, 0, 0, Math.PI * 2);
-    ctx.fillStyle = `rgb(${pal.leaves.shadow.join(',')})`;
-    ctx.fill();
-    ctx.restore();
-
-    // Lower right leaf
-    ctx.save();
-    ctx.translate(midX, midY);
-    ctx.rotate(leafSpread + 0.3);
-    ctx.beginPath();
-    ctx.ellipse(0, -14, 6.5, 16, 0, 0, Math.PI * 2);
-    ctx.fillStyle = `rgb(${pal.leaves.base.join(',')})`;
-    ctx.fill();
-    ctx.restore();
-
-    // Tier 2: Upper crown cotyledon leaves (at the tip)
-    // Left crown leaf
-    ctx.save();
-    ctx.translate(droopX, -h + droopY);
-    ctx.rotate(-leafSpread);
-    ctx.beginPath();
-    ctx.ellipse(0, -18, 8, 22, 0, 0, Math.PI * 2);
-    ctx.fillStyle = `rgb(${pal.leaves.highlight.join(',')})`;
-    ctx.fill();
-    ctx.restore();
-
-    // Right crown leaf
-    ctx.save();
-    ctx.translate(droopX, -h + droopY);
-    ctx.rotate(leafSpread);
-    ctx.beginPath();
-    ctx.ellipse(0, -18, 8, 22, 0, 0, Math.PI * 2);
-    ctx.fillStyle = `rgb(${pal.leaves.base.join(',')})`;
-    ctx.fill();
-    ctx.restore();
-
-    // Swelling tender flower bud tip
-    const budSize = 7 + lift * 8;
-    ctx.beginPath();
-    ctx.ellipse(droopX, -h + droopY - 6, budSize * 0.8, budSize * 1.2, 0, 0, Math.PI * 2);
-    ctx.fillStyle = `rgb(${pal.red.highlight.join(',')})`;
-    ctx.fill();
-
-    // Glistening dew drop at tip
-    ctx.beginPath();
-    ctx.arc(droopX + 2, -h + droopY - 14, 2.5, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255, 255, 255, ${0.7 + Math.sin(time * 5) * 0.3})`;
-    ctx.fill();
-
-    ctx.restore();
-  }
-
-  // Vintage Farmer Character Animation (Walking in with watering can, pouring water)
-  function drawFarmerAnimation(ctx, plantX, groundY, time, pal) {
-    if (state.stage === 'seedling') return;
-
-    const f = state.farmer;
-    const bob = Math.abs(Math.sin(time * 12)) * 6; // Footstep bobbing
-
-    ctx.save();
-    ctx.translate(f.x, groundY - bob);
-
-    // 1. Farmer Straw Hat (Classic Wide Brim)
-    ctx.beginPath();
-    ctx.ellipse(0, -118, 32, 8, 0, 0, Math.PI * 2);
-    ctx.fillStyle = '#d4a359'; // Straw gold
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(0, -124, 16, 12, 0, 0, Math.PI * 2);
-    ctx.fillStyle = '#b88636';
-    ctx.fill();
-
-    // 2. Farmer Head & Beard
-    ctx.beginPath();
-    ctx.arc(0, -104, 12, 0, Math.PI * 2);
-    ctx.fillStyle = '#ffd1a4'; // Skin tone
-    ctx.fill();
-
-    // Rustic Beard
-    ctx.beginPath();
-    ctx.moveTo(-10, -102);
-    ctx.quadraticCurveTo(0, -86, 10, -102);
-    ctx.fillStyle = '#e6edf3';
-    ctx.fill();
-
-    // 3. Denim Overalls / Farmer Jacket
-    ctx.beginPath();
-    ctx.rect(-16, -92, 32, 42);
-    ctx.fillStyle = '#316dca'; // Denim blue
-    ctx.fill();
-
-    // Red plaid collar
-    ctx.beginPath();
-    ctx.moveTo(-10, -92);
-    ctx.lineTo(0, -82);
-    ctx.lineTo(10, -92);
-    ctx.strokeStyle = '#d73a49';
-    ctx.lineWidth = 4;
-    ctx.stroke();
-
-    // 4. Arms & Watering Can
-    ctx.beginPath();
-    ctx.moveTo(12, -82);
-    ctx.quadraticCurveTo(24, -70, 32, -68);
-    ctx.strokeStyle = '#316dca';
-    ctx.lineWidth = 6;
-    ctx.stroke();
-
-    // Watering Can
-    ctx.save();
-    ctx.translate(32, -68);
-    // Can body
-    ctx.beginPath();
-    ctx.ellipse(10, 0, 16, 12, 0, 0, Math.PI * 2);
-    ctx.fillStyle = '#6e7681'; // Galvanized steel
-    ctx.fill();
-    // Can spout (angled downwards towards plant)
-    ctx.beginPath();
-    ctx.moveTo(18, -4);
-    ctx.lineTo(34, 10);
-    ctx.strokeStyle = '#6e7681';
-    ctx.lineWidth = 5;
-    ctx.stroke();
-    // Rosette sprinkler head
-    ctx.beginPath();
-    ctx.arc(36, 12, 6, 0, Math.PI * 2);
-    ctx.fillStyle = '#8b949e';
-    ctx.fill();
-
-    // Water Stream & Droplets if pouring
-    if (f.isPouring) {
-      for (let d = 0; d < 8; d++) {
-        const streamX = 36 + Math.random() * 12 + d * 4;
-        const streamY = 14 + (d * 8) + (Math.sin(time * 30 + d) * 4);
-        ctx.beginPath();
-        ctx.arc(streamX, streamY, 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = '#58a6ff';
-        ctx.fill();
-      }
-    }
-    ctx.restore();
-
-    // 5. Walking Legs
-    const legSwing = Math.sin(time * 12) * 12;
-    // Left leg
-    ctx.beginPath();
-    ctx.moveTo(-8, -50);
-    ctx.lineTo(-8 - legSwing, 0);
-    ctx.strokeStyle = '#1f4880';
-    ctx.lineWidth = 7;
-    ctx.stroke();
-
-    // Right leg
-    ctx.beginPath();
-    ctx.moveTo(8, -50);
-    ctx.lineTo(8 + legSwing, 0);
-    ctx.strokeStyle = '#1f4880';
-    ctx.lineWidth = 7;
-    ctx.stroke();
-
-    ctx.restore();
-  }
-
   // --- BOUNTIFUL BOUQUET: STEM-DRIVEN GROWTH & BLOOM ---
   function drawBountifulBouquet(ctx, progress, time, centerX, groundY, pal) {
-    const bouquet = BOUQUET_SCHEMES[state.species] || BOUQUET_SCHEMES.grand;
+    // Spread the blooms apart and trim their size so each flower reads on its own
+    // while the arrangement keeps its rounded bouquet silhouette
+    const SPREAD_X = 1.15;
+    const SPREAD_Y = 1.05;
+    const BLOOM_SIZE = 0.55;
+    const scheme = BOUQUET_SCHEMES[state.species] || BOUQUET_SCHEMES.grand;
+    // Extra blooms tucked into the gaps between the main 13 for a fuller bouquet
+    const fillers = BOUQUET_FILLERS.map((f, i) => {
+      const donor = scheme[(i * 5 + 3) % scheme.length];
+      return { ...f, type: donor.type, color: FILLER_COLORS[i % FILLER_COLORS.length] };
+    });
+    const bouquet = scheme.concat(fillers).map((fl) => ({
+      ...fl,
+      relX: fl.relX * SPREAD_X,
+      relY: fl.relY * SPREAD_Y,
+      scale: fl.scale * BLOOM_SIZE,
+    }));
     const centerY = state.height * 0.54;
     const baseOriginX = centerX;
     const baseOriginY = groundY;
@@ -1342,7 +1174,7 @@
     const imgData = offCtx.getImageData(0, 0, w, h);
     const pixels = imgData.data;
 
-    ctx.fillStyle = '#050608';
+    ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, w, h);
 
     const ramp = RAMPS[state.asciiMode] || RAMPS.classic;
@@ -1386,6 +1218,9 @@
         }
       }
     }
+
+    // Keep the landing completely black: pollen and vignette only arrive with the bloom
+    if (state.stage === 'seedling') return;
 
     renderParticles(ctx, time);
 
@@ -1431,7 +1266,6 @@
 
   // --- TIME-LAPSE & LIFECYCLE ANIMATION LOOP ---
   let lastTime = performance.now();
-  let stepTimer = 0;
 
   function renderLoop(currentTime) {
     requestAnimationFrame(renderLoop);
@@ -1441,42 +1275,6 @@
 
     if (state.isPlaying) {
       state.time += delta * state.speed;
-
-      // 1. STAGE: WATERING FARMER CINEMATIC
-      if (state.stage === 'watering') {
-        const f = state.farmer;
-        const targetStopX = state.width / 2 - 80;
-
-        if (f.x < targetStopX) {
-          f.x += 320 * delta; // Crisp walk-in
-          stepTimer += delta;
-          if (stepTimer > 0.24) {
-            stepTimer = 0;
-            playFootstepSound();
-          }
-        } else {
-          // Arrived at sprout! Pour water
-          if (!f.isPouring) {
-            f.isPouring = true;
-            f.waterStartTime = performance.now();
-            playWaterPourSound(1.8);
-
-            setTimeout(() => {
-              // Transition from seedling to blooming bouquet!
-              state.stage = 'blooming';
-              state.progress = 0.12;
-              playBloomWhoosh();
-
-              // Update typography split state
-              updateTypographySplit(true);
-
-              // Reveal side botanical card
-              const cardContainer = document.getElementById('botanical-card-container');
-              if (cardContainer) cardContainer.classList.remove('card-hidden');
-            }, 1800);
-          }
-        }
-      }
 
       // 2. STAGE: CONTINUOUS TIME-LAPSE BLOOMING & BREATHING
       if (state.stage === 'blooming') {
@@ -1503,12 +1301,6 @@
           }
         }
 
-        // Dynamically split/un-split typography depending on bloom height
-        if (state.progress > 0.40) {
-          updateTypographySplit(true);
-        } else {
-          updateTypographySplit(false);
-        }
       }
     }
 
@@ -1520,19 +1312,6 @@
     // Render Scene & Rasterize
     drawMasterScene(state.offCtx, state.progress, state.time);
     rasterizeToAscii(state.ctx, state.offCtx, state.time);
-  }
-
-  // --- TYPOGRAPHY SPLIT MANAGER ---
-  function updateTypographySplit(isSplit) {
-    const title = document.getElementById('title-overlay');
-    if (!title) return;
-    if (isSplit) {
-      title.classList.remove('state-center');
-      title.classList.add('state-split');
-    } else {
-      title.classList.remove('state-split');
-      title.classList.add('state-center');
-    }
   }
 
   // --- DOSSIER & THEME MANAGERS ---
@@ -1555,28 +1334,38 @@
       fact.innerHTML = dossier.fact.replace(/\n/g, '<br>');
     }
 
-    // Update collapsed dock pill label
-    const pillSummary = document.getElementById('pill-summary');
-    const pillIcon = document.getElementById('pill-flower-icon');
-    if (pillSummary) {
-      const paletteName = PALETTES[state.palette].name;
-      pillSummary.textContent = `${dossier.name.split(' ')[0]} • ${paletteName}`;
-    }
+    const note = document.getElementById('bio-note');
+    if (note) note.textContent = dossier.note;
   }
 
   function updateTheme(themeKey) {
     const pal = PALETTES[themeKey] || PALETTES.original;
     state.palette = themeKey;
 
-    // Update body theme class for dynamic background glow and typography color
-    document.body.className = pal.themeClass;
+    // Swap only the theme class so state classes like "is-bloomed" survive
+    Object.values(PALETTES).forEach((p) => document.body.classList.remove(p.themeClass));
+    document.body.classList.add(pal.themeClass);
     document.body.setAttribute('data-species', state.species);
 
-    const pillSummary = document.getElementById('pill-summary');
-    if (pillSummary) {
-      const dossierName = (BOTANICAL_DOSSIERS[state.species] || BOTANICAL_DOSSIERS.grand).name;
-      pillSummary.textContent = `${dossierName.split(' ')[0]} • ${pal.name}`;
-    }
+    document.querySelectorAll('[data-theme-key]').forEach((el) => {
+      el.classList.toggle('is-active', el.dataset.themeKey === themeKey);
+    });
+  }
+
+  // Pixel-art intro hands the stage over to the ASCII bloom
+  function startBloom() {
+    state.stage = 'blooming';
+    state.progress = 0.04;
+    state.loopDirection = 1;
+    state.pauseAtPeak = 0;
+    playBloomWhoosh();
+    document.body.classList.add('is-bloomed');
+  }
+
+  function resetToSeedling() {
+    state.stage = 'seedling';
+    state.progress = 0.05;
+    document.body.classList.remove('is-bloomed');
   }
 
   // --- INTERACTIVITY & CONTROLS SETUP ---
@@ -1609,83 +1398,66 @@
   }
 
   function setupControls() {
-    // 1. ADD WATER & CULTIVATE BUTTON (Landing Page Trigger)
-    const waterBtn = document.getElementById('btn-water');
-    const landingOverlay = document.getElementById('landing-stage');
-
-    if (waterBtn) {
-      waterBtn.addEventListener('click', () => {
-        // Hide landing card
-        if (landingOverlay) landingOverlay.classList.add('fade-out');
-
-        // Start farmer sequence
-        state.stage = 'watering';
-        state.farmer.x = -100;
-        state.farmer.isPouring = false;
-        playBloomTone(440.0, 0.5);
-      });
-    }
-
-    // 2. RE-WATER BUTTON
-    const rewaterBtn = document.getElementById('btn-rewater');
-    if (rewaterBtn) {
-      rewaterBtn.addEventListener('click', () => {
-        state.stage = 'watering';
-        state.farmer.x = -100;
-        state.farmer.isPouring = false;
-        state.progress = 0.05;
-        state.loopDirection = 1;
-        updateTypographySplit(false);
-      });
-    }
-
-    // 3. FLOWER SPECIES SELECTOR
-    const speciesSelect = document.getElementById('select-species');
-    if (speciesSelect) {
-      speciesSelect.addEventListener('change', (e) => {
-        state.species = e.target.value;
-        updateDossier(state.species);
-        // Retain continuous bloom or smoothly restart
+    // 1. SPECIES CHIPS
+    document.querySelectorAll('[data-species-key]').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        const key = chip.dataset.speciesKey;
+        if (!BOUQUET_SCHEMES[key] || key === state.species) return;
+        state.species = key;
+        document.querySelectorAll('[data-species-key]').forEach((c) => c.classList.toggle('is-active', c === chip));
+        updateDossier(key);
+        // Swap content with a little re-entry flourish
+        const card = document.getElementById('botanical-card');
+        if (card) {
+          card.classList.remove('is-swapping');
+          void card.offsetWidth;
+          card.classList.add('is-swapping');
+        }
         if (state.stage === 'blooming') {
           state.progress = 0.20;
           state.loopDirection = 1;
           playBloomTone(523.25, 0.6);
         }
       });
-    }
+    });
 
-    // 4. DESIGN SYSTEM / THEME SELECTOR
-    const paletteSelect = document.getElementById('select-palette');
-    if (paletteSelect) {
-      paletteSelect.addEventListener('change', (e) => {
-        updateTheme(e.target.value);
+    // 2. THEME SWATCHES
+    document.querySelectorAll('[data-theme-key]').forEach((sw) => {
+      sw.addEventListener('click', () => {
+        updateTheme(sw.dataset.themeKey);
         playBloomTone(659.25, 0.4);
       });
-    }
+    });
 
-    // 5. SOUND TOGGLE
+    // 3. SOUND TOGGLE
     const soundBtn = document.getElementById('btn-sound');
     if (soundBtn) {
       soundBtn.addEventListener('click', () => {
         state.soundEnabled = !state.soundEnabled;
-        soundBtn.innerHTML = state.soundEnabled ? '&#128276; Sound: ON' : '&#128263; Sound: OFF';
+        soundBtn.classList.toggle('is-off', !state.soundEnabled);
+        soundBtn.setAttribute('aria-pressed', String(state.soundEnabled));
         if (state.soundEnabled) playBloomTone(523.25, 0.4);
       });
     }
 
-    // Keyboard Shortcuts
+    // 4. BIO CARD COLLAPSE
+    const bioToggle = document.getElementById('bio-toggle');
+    const bioContainer = document.getElementById('botanical-card-container');
+    if (bioToggle && bioContainer) {
+      bioToggle.addEventListener('click', () => {
+        const collapsed = bioContainer.classList.toggle('is-collapsed');
+        bioToggle.setAttribute('aria-expanded', String(!collapsed));
+      });
+    }
+
+    // Keyboard Shortcuts (Space / W to water is handled by the intro)
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
       const key = e.key.toLowerCase();
-      if (key === ' ' || key === 'w') {
-        if (state.stage === 'seedling' && waterBtn) waterBtn.click();
-      } else if (key === 's') {
+      if (key === 's') {
         if (soundBtn) soundBtn.click();
       } else if (key === 'h') {
-        const dock = document.getElementById('dock-wrapper');
-        const card = document.getElementById('botanical-card-container');
-        if (dock) dock.style.display = dock.style.display === 'none' ? 'flex' : 'none';
-        if (card) card.style.display = card.style.display === 'none' ? 'block' : 'none';
+        document.body.classList.toggle('ui-hidden');
       }
     });
   }
@@ -1696,21 +1468,23 @@
     init();
   }
 
-  // Window API for external control or debugging
+  // Window API used by the pixel-art intro (garden_intro.js) and for debugging
   window.AsciiBotanicalGarden = {
     state,
+    startBloom,
+    resetToSeedling,
+    sfx: {
+      step: playFootstepSound,
+      pour: playWaterPourSound,
+      tone: playBloomTone,
+      whoosh: playBloomWhoosh,
+    },
     setSpecies: (s) => {
-      if (BOUQUET_SCHEMES[s]) {
-        state.species = s;
-        updateDossier(s);
-      }
+      const chip = document.querySelector(`[data-species-key="${s}"]`);
+      if (chip) chip.click();
     },
     setTheme: (t) => {
       if (PALETTES[t]) updateTheme(t);
-    },
-    waterPlant: () => {
-      const btn = document.getElementById('btn-water');
-      if (btn) btn.click();
     },
   };
 })();

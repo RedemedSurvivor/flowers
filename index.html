@@ -3,117 +3,109 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ASCII Botanical Garden & Time-Lapse</title>
+  <title>So I Grew You Some</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="theme-botanical">
-  <!-- Dynamic Atmospheric Background Glow -->
+<body class="theme-botanical" data-species="grand">
+  <!-- Atmospheric glow (only after the bloom; the landing stays pure black) -->
   <div id="ambient-glow"></div>
 
-  <!-- ASCII Canvas Layer -->
+  <!-- ASCII bouquet layer -->
   <div id="canvas-container">
     <canvas id="ascii-canvas"></canvas>
   </div>
 
-  <!-- Dynamic Typography Header that Splits and Glides to Sides on Bloom -->
-  <header id="title-overlay" class="state-center">
-    <div class="split-col split-left" id="title-left">
-      <h1 class="viral-title">Who needs flowers <span class="viral-subtext">when <em>you</em> can code them?</span></h1>
-      <div class="subtitle-code">&gt; procedural ascii blossom &bull; cultivate life</div>
-    </div>
-    <div class="split-col split-right" id="title-right">
-      <h1 class="viral-title">when <em>you</em> can code them?</h1>
-      <div class="subtitle-code">&gt; procedural ascii blossom</div>
-    </div>
-  </header>
+  <!-- Pixel-art intro: seedling, farmer, watering can -->
+  <canvas id="intro-canvas" aria-hidden="true"></canvas>
 
-  <!-- Interactive Farmer Landing Prompt (Before Water is Added) -->
-  <div id="landing-stage" class="landing-overlay">
-    <div class="landing-card">
-      <div class="card-tag">&#127793; ASCII Garden Gate</div>
-      <h2 class="card-title">A quiet sprout awaits nourishment</h2>
-      <p class="card-desc">Click below to summon the gardener and pour morning water. Watch the seedling erupt into a bountiful blooming bouquet.</p>
-      <button id="btn-water" class="water-pulse-btn">
-        <span class="water-icon">&#128167;</span>
-        <span class="btn-text">Add Water &amp; Cultivate</span>
+  <!-- Landing: the quote and the water drop -->
+  <main id="landing" aria-label="Landing">
+    <div class="quote">
+      <p class="quote-eyebrow">for you, specifically</p>
+      <h1 class="quote-line">
+        <span class="ql ql-1">For the days you need flowers</span>
+        <span class="ql ql-2">&amp; I'm not there to bring them&hellip;</span>
+      </h1>
+      <p class="quote-kicker"><span>so I grew you some.</span></p>
+    </div>
+
+    <div class="water-cta">
+      <button id="btn-water" class="drop-btn" aria-label="Water the seedling">
+        <svg class="drop-svg" viewBox="0 0 64 80" aria-hidden="true">
+          <defs>
+            <linearGradient id="dropFill" x1="0" y1="0" x2="0.4" y2="1">
+              <stop offset="0" stop-color="#bfe8ff"/>
+              <stop offset="0.55" stop-color="#4fb0ff"/>
+              <stop offset="1" stop-color="#1d6fe0"/>
+            </linearGradient>
+            <radialGradient id="dropShine" cx="0.35" cy="0.55" r="0.35">
+              <stop offset="0" stop-color="#ffffff" stop-opacity="0.95"/>
+              <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <path d="M32 4 C32 4 6 36 6 52 a26 26 0 0 0 52 0 C58 36 32 4 32 4 Z" fill="url(#dropFill)"/>
+          <ellipse cx="22" cy="50" rx="7" ry="11" fill="url(#dropShine)" transform="rotate(18 22 50)"/>
+          <circle cx="40" cy="64" r="2.4" fill="#ffffff" opacity="0.7"/>
+        </svg>
+        <span class="drop-ripple"></span>
       </button>
-      <div class="water-hint">&#9881; Audio ready &bull; Web Audio procedural soundscape</div>
+      <p class="water-hint">tap the drop to water her</p>
     </div>
-  </div>
+  </main>
 
-  <!-- Botanical History & Fun Fact Side Cards -->
-  <aside id="botanical-card-container" class="card-hidden">
-    <div class="botanical-card" id="botanical-card">
-      <div class="bio-badge" id="bio-species-tag">&#127801; Species Dossier</div>
-      <h3 class="bio-title" id="bio-name">English Garden Roses</h3>
-      <div class="bio-botanical-name" id="bio-botanical-name">Rosa gallica &bull; Rosaceae</div>
-      <hr class="bio-divider">
-      <p class="bio-text" id="bio-description">
-        Cultivated since antiquity, English garden roses boast layered cabbage-style petal whorls governed by the golden Fibonacci ratio.
-      </p>
-      <div class="bio-fact-box" id="bio-fact-box">
-        <span class="fact-tag">&#10024; Botanical Insight:</span>
-        <span id="bio-fact">Fossilized rose leaves date back 35 million years, making them older than the earliest human civilizations.</span>
+  <!-- Speech bubbles (positioned by garden_intro.js) -->
+  <div id="plant-bubble" class="pixel-bubble"><span>psst&hellip; water me?</span></div>
+  <div id="farmer-bubble" class="pixel-bubble farmer"><span></span></div>
+
+  <!-- Flower bio card -->
+  <aside id="botanical-card-container" aria-live="polite">
+    <button id="bio-toggle" class="bio-toggle" aria-expanded="true" aria-controls="botanical-card" title="Hide / show the story">
+      <span class="when-open" aria-hidden="true">&times;</span>
+      <span class="when-closed" aria-hidden="true">&#127800;</span>
+    </button>
+    <article class="botanical-card" id="botanical-card">
+      <div class="bio-badge" id="bio-species-tag"></div>
+      <h2 class="bio-title" id="bio-name"></h2>
+      <div class="bio-botanical-name" id="bio-botanical-name"></div>
+      <p class="bio-text" id="bio-description"></p>
+      <div class="bio-fact-box">
+        <span class="fact-tag">&#10024; fun fact</span>
+        <span id="bio-fact"></span>
       </div>
-      <div class="bio-meta-row">
-        <span class="meta-item">&#128167; Watered: <strong>100%</strong></span>
-        <span class="meta-item">&#9883; Bloom: <strong id="bio-bloom-status">In Perpetuity</strong></span>
+      <div class="bio-note">
+        <span class="note-tag">a note from me &#9825;</span>
+        <p id="bio-note"></p>
       </div>
-    </div>
+    </article>
   </aside>
 
-  <!-- Compact Floating Dock with Hover Spring Bounce -->
-  <div id="dock-wrapper">
-    <!-- Collapsed Trigger Pill -->
-    <div id="dock-collapsed-pill">
-      <span class="pill-flower-icon" id="pill-species-icon">&#128144;</span>
-      <span class="pill-label" id="pill-summary">Grand Garden &bull; Botanical</span>
-      <span class="pill-arrow">&#9650; Controls</span>
+  <!-- Controls dock -->
+  <nav id="garden-dock" aria-label="Garden controls">
+    <div class="dock-group" role="group" aria-label="Flower">
+      <button class="chip is-active" data-species-key="grand" data-label="Bouquet">&#128144;</button>
+      <button class="chip" data-species-key="roses" data-label="Roses">&#127801;</button>
+      <button class="chip" data-species-key="chrysanthemums" data-label="Mums">&#127804;</button>
+      <button class="chip" data-species-key="lilies" data-label="Lilies">&#127802;</button>
+      <button class="chip" data-species-key="peonies" data-label="Peonies">&#127800;</button>
     </div>
-
-    <!-- Expanded Menu on Hover -->
-    <div id="dock-expanded-content">
-      <!-- Flower Species Select -->
-      <div class="compact-dock-item">
-        <label class="dock-label">&#127800; Flower:</label>
-        <select id="select-species" class="mini-select" title="Select flower species">
-          <option value="grand" selected>💐 Grand Garden</option>
-          <option value="roses">🌹 Garden Roses</option>
-          <option value="chrysanthemums">🌼 Chrysanthemums</option>
-          <option value="lilies">🌺 Asiatic Lilies</option>
-          <option value="peonies">🌸 Peonies</option>
-        </select>
-      </div>
-
-      <div class="dock-sep"></div>
-
-      <!-- Design System Theme Select -->
-      <div class="compact-dock-item">
-        <label class="dock-label">&#127912; Theme:</label>
-        <select id="select-palette" class="mini-select" title="Change design system">
-          <option value="original" selected>Botanical Classic</option>
-          <option value="golden">Midnight Gold</option>
-          <option value="sakura">Sakura Dream</option>
-          <option value="cyberpunk">Cyberpunk Neon</option>
-          <option value="matrix">Phosphor Matrix</option>
-        </select>
-      </div>
-
-      <div class="dock-sep"></div>
-
-      <!-- Sound Toggle -->
-      <button id="btn-sound" class="mini-btn" title="Toggle procedural sound effects">
-        &#128276; Sound: ON
-      </button>
-
-      <!-- Re-Water / Re-bloom -->
-      <button id="btn-rewater" class="mini-btn accent-btn" title="Re-water and replay the farmer animation">
-        &#128167; Re-water
-      </button>
+    <div class="dock-sep"></div>
+    <div class="dock-group swatches" role="group" aria-label="Colour theme">
+      <button class="swatch is-active" style="--sw:conic-gradient(#f5203c 0 33%,#ffb914 0 66%,#32c344 0)" data-theme-key="original" data-label="Classic"></button>
+      <button class="swatch" style="--sw:conic-gradient(#ffcd2d 0 50%,#b4781e 0)" data-theme-key="golden" data-label="Gold"></button>
+      <button class="swatch" style="--sw:conic-gradient(#ff7da5 0 50%,#fff0f6 0)" data-theme-key="sakura" data-label="Sakura"></button>
+      <button class="swatch" style="--sw:conic-gradient(#ff0080 0 50%,#00f5ff 0)" data-theme-key="cyberpunk" data-label="Neon"></button>
+      <button class="swatch" style="--sw:conic-gradient(#1ef541 0 50%,#063d10 0)" data-theme-key="matrix" data-label="Matrix"></button>
     </div>
-  </div>
+    <div class="dock-sep"></div>
+    <button id="btn-sound" class="chip icon" aria-pressed="true" data-label="Sound">
+      <span class="snd-on" aria-hidden="true">&#128276;</span><span class="snd-off" aria-hidden="true">&#128277;</span>
+    </button>
+    <button id="btn-rewater" class="chip icon accent" data-label="Water again">&#128167;</button>
+  </nav>
 
-  <!-- Keyboard Shortcuts & Main Engine -->
   <script src="lily_bouquet.js"></script>
+  <script src="garden_intro.js"></script>
 </body>
 </html>
