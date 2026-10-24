@@ -511,7 +511,7 @@
     if (state.stage === 'seedling') return;
 
     // Fit the bouquet to smaller screens, scaling around the root of the stems
-    const fit = Math.min(0.9, state.width / 1000, state.height / 1000);
+    const fit = Math.min(1, state.width / 900, state.height / 900);
     ctx.save();
     ctx.translate(centerX, groundY);
     ctx.scale(fit, fit);
@@ -560,9 +560,9 @@
   function drawBountifulBouquet(ctx, progress, time, centerX, groundY, pal) {
     // Spread the blooms apart and trim their size so each flower reads on its own
     // while the arrangement keeps its rounded bouquet silhouette
-    const SPREAD_X = 1.15;
-    const SPREAD_Y = 1.05;
-    const BLOOM_SIZE = 0.55;
+    const SPREAD_X = 1.08;
+    const SPREAD_Y = 1.02;
+    const BLOOM_SIZE = 1.0;
     const scheme = BOUQUET_SCHEMES[state.species] || BOUQUET_SCHEMES.grand;
     // Extra blooms tucked into the gaps between the main 13 for a fuller bouquet
     const fillers = BOUQUET_FILLERS.map((f, i) => {
